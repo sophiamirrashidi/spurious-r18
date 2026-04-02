@@ -82,7 +82,7 @@ class ColoredMNIST(Dataset):
 
 if __name__ == '__main__':
     train_dataset = ColoredMNIST(root='~/datasets/mnist', split='train', color_correlation=0.9)
-    val_dataset   = ColoredMNIST(root='~/datasets/mnist', split='val',   color_correlation=0.9)
+    val_dataset   = ColoredMNIST(root='~/datasets/mnist', split='val',   color_correlation=0.7)
     test_dataset  = ColoredMNIST(root='~/datasets/mnist', split='test',  color_correlation=0.5)
 
     print(f'Train size: {len(train_dataset)}')
