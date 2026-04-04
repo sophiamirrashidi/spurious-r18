@@ -77,29 +77,23 @@ def log_epoch_accuracy(epoch, epoch_correct, epoch_total, csv_path='probe_accura
 
 def main(args):
     train_dataset = ColoredMNIST(root='~/datasets/mnist', split='train', color_correlation=0.9)
-    val_dataset   = ColoredMNIST(root='~/datasets/mnist', split='val',   color_correlation=0.7)
-    test_dataset  = ColoredMNIST(root='~/datasets/mnist', split='test',  color_correlation=0.5)
-
     train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
-    val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=True)
-    test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=True)
     
     model = get_model()
 
     activation_dict = {}
     def getActivation(name):
-        # the hook signature
         def hook(model, input, output):
             activation_dict[name] = output.detach()
         return hook
 
     # register the forward hooks to get the activations
-    model.relu.register_forward_hook(getActivation('relu'))
-    model.layer1.register_forward_hook(getActivation('layer1'))
-    model.layer2.register_forward_hook(getActivation('layer2'))
-    model.layer3.register_forward_hook(getActivation('layer3'))
-    model.layer4.register_forward_hook(getActivation('layer4'))
-    model.avgpool.register_forward_hook(getActivation('avgpool'))
+    h1 = model.relu.register_forward_hook(getActivation('relu'))
+    h2 = model.layer1.register_forward_hook(getActivation('layer1'))
+    h3 = model.layer2.register_forward_hook(getActivation('layer2'))
+    h4 = model.layer3.register_forward_hook(getActivation('layer3'))
+    h5 = model.layer4.register_forward_hook(getActivation('layer4'))
+    h6 = model.avgpool.register_forward_hook(getActivation('avgpool'))
 
     color_probes, digit_probes = define_linear_probes()
 
@@ -138,6 +132,13 @@ def main(args):
 
     print("Saving model...")
     torch.save(model.state_dict(), "./resnet.pt")
+
+    h1.remove()
+    h2.remove()
+    h3.remove()
+    h4.remove()
+    h5.remove()
+    h6.remove()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
