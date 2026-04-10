@@ -3,16 +3,19 @@ import csv
 import itertools
 import os
 import torch
+from datetime import datetime
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 import torchvision
+import torchvision.transforms as transforms
 from generate_colored_mnist import ColoredMNIST
 
 def get_model():
     model = torchvision.models.resnet18(weights=None)
     model.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
     model.maxpool = nn.Identity()
+    model.fc = nn.Linear(512, 2)
     return model
 
 def define_linear_probes():
@@ -63,20 +66,24 @@ def apply_probes(color_probes, digit_probes, activation_dict, y_digit, y_color):
     total_probe_loss = sum(probe_losses)
     return total_probe_loss, probe_correct, batch_size
 
-def log_epoch_accuracy(epoch, epoch_correct, epoch_total, csv_path='probe_accuracy.csv'):
+def log_epoch_accuracy(epoch, epoch_correct, epoch_total, csv_path):
     row = {'epoch': epoch}
     for name, correct in epoch_correct.items():
         row[name] = correct / epoch_total
 
-    file_exists = os.path.exists(csv_path)
+    write_header = not os.path.exists(csv_path)
     with open(csv_path, mode='a', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=row.keys())
-        if not file_exists:
+        if write_header:
             writer.writeheader()
         writer.writerow(row)
 
 def main(args):
-    train_dataset = ColoredMNIST(root='~/datasets/mnist', split='train', color_correlation=0.9)
+    timestamp = datetime.now().strftime('%m-%d-%H-%M')
+    csv_path = f'{timestamp}_probe_accuracy.csv'
+
+    transform = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    train_dataset = ColoredMNIST(root='~/datasets/mnist', split='train', color_correlation=0.9, transform=transform)
     train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
     
     model = get_model()
@@ -125,7 +132,7 @@ def main(args):
             for name, correct in probe_correct.items():
                 epoch_correct[name] = epoch_correct.get(name, 0) + correct
 
-        log_epoch_accuracy(epoch, epoch_correct, epoch_total)
+        log_epoch_accuracy(epoch, epoch_correct, epoch_total, csv_path)
 
         train_loss = train_loss / len(train_dataloader.dataset)
         print('Epoch: {} \tResnet Training Loss: {:.6f}'.format(epoch + 1, train_loss))
