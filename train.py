@@ -80,7 +80,10 @@ def log_epoch_accuracy(epoch, epoch_correct, epoch_total, csv_path):
 
 def main(args):
     timestamp = datetime.now().strftime('%m-%d-%H-%M')
-    csv_path = f'{timestamp}_probe_accuracy.csv'
+    reg_type = "no_reg"
+    if args.weight_decay != None:
+        reg_type = f"l2_reg_{args.weight_decay}"
+    csv_path = f'{timestamp}_probe_accuracy_{reg_type}.csv'
 
     transform = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     train_dataset = ColoredMNIST(root='~/datasets/mnist', split='train', color_correlation=0.9, transform=transform)
@@ -153,7 +156,7 @@ if __name__ == "__main__":
     parser.add_argument("--lr", type=float, default=0.01)
     parser.add_argument("--probe_lr", type=float, default=0.01)
     parser.add_argument("--momentum", type=float, default=0.9)
-    parser.add_argument("--weight_decay", type=float, default=1e-5)
+    parser.add_argument("--weight_decay", type=float, default=None)
     parser.add_argument("--num_epochs", type=int, default=40)
     args = parser.parse_args()
     main(args)
