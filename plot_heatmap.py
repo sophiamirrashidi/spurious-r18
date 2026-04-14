@@ -7,20 +7,20 @@ import seaborn as sns
 LAYER_ORDER = ['relu', 'layer1', 'layer2', 'layer3', 'layer4', 'avgpool']
 
 def plot_heatmap(data, title, output_path):
-    fig, ax = plt.subplots(figsize=(9, 7))
+    fig, ax = plt.subplots(figsize=(10, 6))
     sns.heatmap(
-        data,
+        data.T,
         ax=ax,
         cmap='RdYlGn',
-        vmin=0.0,
-        vmax=1.0,
-        linewidths=0.3,
+        vmin=0.0, 
+        vmax=1.0, 
+        linewidths=0.3, 
         linecolor='white',
-        cbar_kws={'label': 'Accuracy'},
-    )
+        cbar_kws={'label': 'Accuracy'})
+    ax.invert_yaxis()
     ax.set_title(title, fontsize=14, pad=12)
-    ax.set_xlabel('Layer Depth', fontsize=12)
-    ax.set_ylabel('Epoch', fontsize=12)
+    ax.set_xlabel('Epoch', fontsize=12)
+    ax.set_ylabel('Layer Depth', fontsize=12)
     plt.tight_layout()
     plt.savefig(output_path, dpi=150)
     plt.close()
@@ -39,12 +39,13 @@ def main(args):
     color_df = df[color_cols].rename(columns={f'{l}_color': l for l in LAYER_ORDER})
 
     plot_heatmap(digit_df, 'Digit Probe Accuracy by Layer and Epoch',
-                 os.path.join(out_dir, 'digit_probe_heatmap.png'))
+                 os.path.join(out_dir, f'digit_probe_heatmap_{args.regularization}.png'))
     plot_heatmap(color_df, 'Color Probe Accuracy by Layer and Epoch',
-                 os.path.join(out_dir, 'color_probe_heatmap.png'))
+                 os.path.join(out_dir, f'color_probe_heatmap_{args.regularization}.png'))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('csv_path', type=str, help='Path to the probe_accuracy CSV from train.py')
+    parser.add_argument('regularization', type=str, help="Please enter as the following: <reg_type>_<amount> ex: 'l2_1e-5'")
     args = parser.parse_args()
     main(args)
