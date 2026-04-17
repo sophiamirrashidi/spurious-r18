@@ -1,3 +1,0 @@
-epoch,relu_color,layer1_color,layer2_color,layer3_color,layer4_color,avgpool_color,relu_digit,layer1_digit,layer2_digit,layer3_digit,layer4_digit,avgpool_digit
-0,0.98798,0.99348,0.96166,0.83952,0.73642,0.7392,0.69616,0.702,0.7174,0.87028,0.96482,0.96466
-1,0.99964,0.9995,0.9891,0.8893,0.78776,0.7877,0.70312,0.7084,0.76752,0.93078,0.99134,0.9914
