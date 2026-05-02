@@ -83,7 +83,7 @@ def main(args):
     ])
     df = pd.read_csv(f'{args.datapath}/metadata.csv')
     train_df = df[df['split'] == 0].reset_index(drop=True)
-    train_dataset = Waterbirds(df=train_df, transform=transform)
+    train_dataset = Waterbirds(df=train_df, root=args.datapath, transform=transform)
     train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
 
     model = torchvision.models.resnet18(weights=None)

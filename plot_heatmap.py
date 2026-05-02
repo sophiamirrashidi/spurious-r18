@@ -32,8 +32,11 @@ def main(args):
 
     out_dir = os.path.dirname(os.path.abspath(args.csv_path))
 
-    digit_cols = [f'{layer}_digit' for layer in LAYER_ORDER]
-    color_cols = [f'{layer}_color' for layer in LAYER_ORDER]
+    # digit_cols = [f'{layer}_digit' for layer in LAYER_ORDER]
+    # color_cols = [f'{layer}_color' for layer in LAYER_ORDER]
+
+    digit_cols = [f'{layer}_bird' for layer in LAYER_ORDER]
+    color_cols = [f'{layer}_water' for layer in LAYER_ORDER]
 
     digit_df = df[digit_cols].rename(columns={f'{l}_digit': l for l in LAYER_ORDER})
     color_df = df[color_cols].rename(columns={f'{l}_color': l for l in LAYER_ORDER})

@@ -64,7 +64,8 @@ def main(args):
     test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
 
     model = get_model()
-    model.load_state_dict(torch.load(args.model_path, map_location=device))
+    model.load_state_dict(torch.load(args.model_path, map_location=device, weights_only=False))
+
     model.to(device)
 
     accuracy, precision, recall = evaluate(model, test_loader, device)
@@ -79,5 +80,6 @@ if __name__ == "__main__":
     parser.add_argument("--model_path", type=str, required=True)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--color_correlation", type=float, default=0.5)
+  
     args = parser.parse_args()
     main(args)
