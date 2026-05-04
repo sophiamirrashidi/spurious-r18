@@ -141,7 +141,7 @@ def main(args):
         print('Epoch: {} \tResnet Training Loss: {:.6f}'.format(epoch + 1, train_loss))
 
     print("Saving model...")
-    torch.save(model.state_dict(), "./resnet.pt")
+    torch.save(model.state_dict(), f"./resnet_l2_{args.weight_decay}.pt")
 
     h1.remove()
     h2.remove()
