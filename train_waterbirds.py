@@ -74,7 +74,7 @@ def log_epoch_accuracy(epoch, epoch_correct, epoch_total, csv_path):
 
 def main(args):
     timestamp = datetime.now().strftime('%m-%d-%H-%M')
-    csv_path = f'{timestamp}_wb_probe_accuracy.csv'
+    csv_path = f'{timestamp}_wb_probe_accuracy_{args.reg}_{args.weight_decay}.csv'
 
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
@@ -156,6 +156,7 @@ if __name__ == "__main__":
     parser.add_argument("--momentum", type=float, default=0.9)
     parser.add_argument("--weight_decay", type=float, default=1e-5)
     parser.add_argument("--num_epochs", type=int, default=40)
-    parser.add_argument("--datapath", type=str, default="../bird_complete95_forest2water2")
+    parser.add_argument("--reg", type=str, default=40)
+    parser.add_argument("--datapath", type=str, default="../waterbird_complete95_forest2water2")
     args = parser.parse_args()
     main(args)
