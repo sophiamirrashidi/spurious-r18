@@ -11,6 +11,7 @@ def plot_heatmap(data, title, output_path):
     sns.heatmap(
         data.T,
         ax=ax,
+        annot=True,
         cmap='RdYlGn',
         vmin=0.0, 
         vmax=1.0, 
@@ -32,23 +33,27 @@ def main(args):
 
     out_dir = os.path.dirname(os.path.abspath(args.csv_path))
 
-    # digit_cols = [f'{layer}_digit' for layer in LAYER_ORDER]
-    # color_cols = [f'{layer}_color' for layer in LAYER_ORDER]
+    digit_cols = [f'{layer}_digit' for layer in LAYER_ORDER]
+    color_cols = [f'{layer}_color' for layer in LAYER_ORDER]
 
-    digit_cols = [f'{layer}_bird' for layer in LAYER_ORDER]
-    color_cols = [f'{layer}_water' for layer in LAYER_ORDER]
+    # digit_cols = [f'{layer}_bird' for layer in LAYER_ORDER]
+    # color_cols = [f'{layer}_water' for layer in LAYER_ORDER]
 
     digit_df = df[digit_cols].rename(columns={f'{l}_digit': l for l in LAYER_ORDER})
     color_df = df[color_cols].rename(columns={f'{l}_color': l for l in LAYER_ORDER})
 
-    plot_heatmap(digit_df, 'Digit Probe Accuracy by Layer and Epoch',
-                 os.path.join(out_dir, f'digit_probe_heatmap_{args.regularization}.png'))
-    plot_heatmap(color_df, 'Color Probe Accuracy by Layer and Epoch',
-                 os.path.join(out_dir, f'color_probe_heatmap_{args.regularization}.png'))
+    # digit_df = df[digit_cols].rename(columns={f'{l}_bird': l for l in LAYER_ORDER})
+    # color_df = df[color_cols].rename(columns={f'{l}_water': l for l in LAYER_ORDER})
+    plot_heatmap(digit_df, 'Digit Probe Accuracy by Layer and Epoch', os.path.join(out_dir, f'digit_probe_heatmap_{args.regularization}.png'))
+    plot_heatmap(color_df, 'Color Probe Accuracy by Layer and Epoch', os.path.join(out_dir, f'color_probe_heatmap_{args.regularization}.png'))
+
+
+    # plot_heatmap(digit_df, 'Bird Probe Accuracy by Layer and Epoch', os.path.join(out_dir, f'bird_probe_heatmap_{args.regularization}.png'))
+    # plot_heatmap(color_df, 'Water Probe Accuracy by Layer and Epoch', os.path.join(out_dir, f'water_probe_heatmap_{args.regularization}.png'))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('csv_path', type=str, help='Path to the probe_accuracy CSV from train.py')
-    parser.add_argument('regularization', type=str, help="Please enter as the following: <reg_type>_<amount> ex: 'l2_1e-5'")
+    parser.add_argument('regularization', type=str, help="Please enter as the following: <reg_type>_<amount> ex: l2_1e-5")
     args = parser.parse_args()
     main(args)
