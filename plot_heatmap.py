@@ -13,9 +13,9 @@ def plot_heatmap(data, title, output_path):
         ax=ax,
         annot=True,
         cmap='RdYlGn',
-        vmin=0.0, 
-        vmax=1.0, 
-        linewidths=0.3, 
+        vmin=0.0,
+        vmax=1.0,
+        linewidths=0.3,
         linecolor='white',
         cbar_kws={'label': 'Accuracy'})
     ax.invert_yaxis()
@@ -33,23 +33,16 @@ def main(args):
 
     out_dir = os.path.dirname(os.path.abspath(args.csv_path))
 
-    digit_cols = [f'{layer}_digit' for layer in LAYER_ORDER]
-    color_cols = [f'{layer}_color' for layer in LAYER_ORDER]
+    bird_cols = [f'{layer}_bird' for layer in LAYER_ORDER]
+    water_cols = [f'{layer}_water' for layer in LAYER_ORDER]
 
-    # digit_cols = [f'{layer}_bird' for layer in LAYER_ORDER]
-    # color_cols = [f'{layer}_water' for layer in LAYER_ORDER]
+    bird_df = df[bird_cols].rename(columns={f'{l}_bird': l for l in LAYER_ORDER})
+    water_df = df[water_cols].rename(columns={f'{l}_water': l for l in LAYER_ORDER})
 
-    digit_df = df[digit_cols].rename(columns={f'{l}_digit': l for l in LAYER_ORDER})
-    color_df = df[color_cols].rename(columns={f'{l}_color': l for l in LAYER_ORDER})
-
-    # digit_df = df[digit_cols].rename(columns={f'{l}_bird': l for l in LAYER_ORDER})
-    # color_df = df[color_cols].rename(columns={f'{l}_water': l for l in LAYER_ORDER})
-    plot_heatmap(digit_df, 'Digit Probe Accuracy by Layer and Epoch', os.path.join(out_dir, f'digit_probe_heatmap_{args.regularization}.png'))
-    plot_heatmap(color_df, 'Color Probe Accuracy by Layer and Epoch', os.path.join(out_dir, f'color_probe_heatmap_{args.regularization}.png'))
-
-
-    # plot_heatmap(digit_df, 'Bird Probe Accuracy by Layer and Epoch', os.path.join(out_dir, f'bird_probe_heatmap_{args.regularization}.png'))
-    # plot_heatmap(color_df, 'Water Probe Accuracy by Layer and Epoch', os.path.join(out_dir, f'water_probe_heatmap_{args.regularization}.png'))
+    plot_heatmap(bird_df, 'Bird Probe Accuracy by Layer and Epoch',
+                 os.path.join(out_dir, f'bird_probe_heatmap_{args.regularization}.png'))
+    plot_heatmap(water_df, 'Water Probe Accuracy by Layer and Epoch',
+                 os.path.join(out_dir, f'water_probe_heatmap_{args.regularization}.png'))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
