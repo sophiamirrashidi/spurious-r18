@@ -1,7 +1,13 @@
 [project]
 name = "spurious-r18"
 version = "0.1.0"
-description = "Add your description here"
+description = "Studying how spurious correlations are encoded in ResNet18 and whether regularization reduces reliance on them"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "torch",
+    "torchvision",
+    "pandas",
+    "matplotlib",
+    "seaborn",
+]

@@ -1,117 +1,148 @@
 # spurious-r18
 
-Experiments studying how spurious correlations are encoded in ResNet18, and whether regularization reduces reliance on them. Linear probes are attached at each layer (relu, layer1–4, avgpool) and trained simultaneously with the main model to measure what features each layer encodes over time.
+Experiments studying how spurious correlations are encoded across ResNet18 layers and whether regularization reduces reliance on them.
 
-Two datasets are used — **Colored MNIST** (digit-color correlation) and **Waterbirds** (bird-background correlation) — across three regularization strategies: L1, L2 (weight decay), and Dropout.
+Linear probes are attached at each layer (`relu`, `layer1`–`layer4`, `avgpool`) and trained simultaneously with the main model to measure what features each layer encodes over training time.
 
 ## Datasets
 
-### Colored MNIST
+- **Colored MNIST** — digit-color correlation (binary: digit ≥ 5, color = red/green)
+- **Waterbirds** — bird type correlated with background (land vs. water)
 
-Generate the dataset before training:
+## Project Structure
 
-```bash
-python generate_colored_mnist.py
+```
+├── train.py              # Unified training script (all datasets + regularizers)
+├── eval.py               # Model evaluation
+├── plot_heatmap.py       # Probe accuracy heatmap visualization
+│
+├── src/                  # Shared library code
+│   ├── models.py         # ResNet18 variants (CMNIST, Waterbirds, Dropout wrapper)
+│   ├── probes.py         # Linear probe definition and forward pass
+│   ├── regularization.py # L1 regularization
+│   ├── logging_utils.py  # CSV epoch logging
+│   └── datasets/         # Dataset classes
+│       ├── colored_mnist.py
+│       └── waterbirds.py
+│
+├── experiments/          # Shell scripts for running full sweeps
+│   ├── train_cmnist.sh
+│   └── train_waterbirds.sh
+│
+└── results/              # Training outputs (CSVs + heatmap PNGs)
+    ├── colored_mnist/
+    │   ├── l1/
+    │   ├── l2/
+    │   └── dropout/
+    └── waterbirds/
+        ├── baseline/
+        ├── l1/
+        ├── l2/
+        └── dropout/
 ```
 
-This creates a `data/` directory with train/test splits where digit color is correlated with the digit label.
+## Setup
+
+Requires Python ≥ 3.11. Install dependencies:
+
+```bash
+pip install -e .
+```
+
+### Colored MNIST
+
+Data is generated on the fly from MNIST (downloaded automatically to `~/datasets/mnist` by default).
 
 ### Waterbirds
 
-Download the Waterbirds dataset and place it at `../waterbird_complete95_forest2water2` relative to this repo (the default `--datapath`). You can override this with `--datapath /your/path`.
+Download the Waterbirds dataset and place it at `../waterbird_complete95_forest2water2` (or specify with `--datapath`).
 
 ---
 
-## Training Experiments
+## Training
 
-### Colored MNIST
+A single `train.py` handles all experiment configurations:
 
-**L1 regularization** — use `train.py` with `--l1_lambda`:
 ```bash
-python train.py --l1_lambda 1e-3 --num_epochs 40 --save_path resnet_l1.pt
+# Colored MNIST with L2 regularization
+python train.py --dataset cmnist --reg l2 --weight_decay 1e-3
+
+# Colored MNIST with L1 regularization
+python train.py --dataset cmnist --reg l1 --l1_lambda 1e-3
+
+# Colored MNIST with Dropout
+python train.py --dataset cmnist --reg dropout --dropout_rate 0.3
+
+# Waterbirds baseline (no regularization)
+python train.py --dataset waterbirds --reg none
+
+# Waterbirds with L1
+python train.py --dataset waterbirds --reg l1 --l1_lambda 1e-3 --datapath ../waterbird_complete95_forest2water2
 ```
 
-**L2 regularization (weight decay)** — use `train.py` with `--weight_decay`:
-```bash
-python train.py --weight_decay 1e-3 --num_epochs 40
-```
-
-**Dropout** — use `train_dropout.py` with `--dropout_rate`:
-```bash
-python train_dropout.py --dropout_rate 0.3 --num_epochs 40 --save_path resnet_dropout.pt
-```
-
-### Waterbirds
-
-**L1 regularization** — use `train_waterbirds_L1.py`:
-```bash
-python train_waterbirds_L1.py --l1_lambda 1e-3 --datapath ../waterbird_complete95_forest2water2 --save_path resnet_wb_l1.pt
-```
-
-**L2 regularization** — use `train_waterbirds.py` with `--weight_decay`:
-```bash
-python train_waterbirds.py --weight_decay 1e-3 --datapath ../waterbird_complete95_forest2water2
-```
-
-**Dropout** — use `train_waterbirds_dropout.py`:
-```bash
-python train_waterbirds_dropout.py --dropout_rate 0.3 --datapath ../waterbird_complete95_forest2water2
-```
-
-### Key flags
+### Key Flags
 
 | Flag | Default | Description |
 |------|---------|-------------|
+| `--dataset` | (required) | `cmnist` or `waterbirds` |
+| `--reg` | `none` | Regularization: `none`, `l1`, `l2`, `dropout` |
 | `--l1_lambda` | `1e-5` | L1 regularization weight |
-| `--weight_decay` | `None` / `1e-5` | L2 weight decay passed to SGD optimizer |
-| `--dropout_rate` | `0.0` | Dropout probability inserted after each residual block |
-| `--num_epochs` | `40` (10 for WB dropout) | Training epochs |
+| `--weight_decay` | `1e-3` | L2 weight decay for SGD |
+| `--dropout_rate` | `0.3` | Dropout probability between residual blocks |
+| `--num_epochs` | `40` | Training epochs |
 | `--lr` | `0.01` | Model learning rate |
-| `--save_path` | `./resnet.pt` | Where to save the trained model weights |
-| `--datapath` | `../waterbird_complete95_forest2water2` | Path to Waterbirds dataset (WB scripts only) |
+| `--probe_lr` | `0.01` | Probe learning rate |
+| `--output_dir` | `results/<dataset>/<reg>` | Where to save outputs |
+| `--data_root` | `~/datasets/mnist` | MNIST data root (cmnist only) |
+| `--datapath` | `../waterbird_complete95_forest2water2` | Waterbirds path |
+
+### Running Full Sweeps
+
+```bash
+bash experiments/train_cmnist.sh
+bash experiments/train_waterbirds.sh
+```
 
 ---
 
 ## Outputs
 
 Each training run produces:
+- A `.pt` model checkpoint in the output directory
+- A CSV of probe accuracies per epoch (one row per epoch, columns: `<layer>_<attribute>`)
 
-- A `.pt` model checkpoint (path set by `--save_path`)
-- A CSV of probe accuracies per epoch, saved alongside the model (e.g. `wb_l1/probe_accuracies_l1_1e-3.csv`)
-
-The CSV has one row per epoch with columns for each layer × attribute combination, e.g. `relu_bird`, `layer1_water`, `avgpool_bird`, etc.
+Column naming: `relu_color`, `layer1_digit`, `avgpool_bird`, `layer3_water`, etc.
 
 ---
 
 ## Generating Heatmaps
 
-After training, visualize probe accuracy across layers and epochs using `plot_heatmap.py`. This script takes the probe accuracy CSV and a label for the regularization configuration:
+Visualize probe accuracy across layers and epochs:
 
 ```bash
-python plot_heatmap.py <path/to/probe_accuracies.csv> <regularization_label>
+python plot_heatmap.py <path/to/probe_accuracy.csv> <regularization_label>
 ```
 
-The `regularization_label` is used only for naming the output PNG files. Use the format `<type>_<value>`, e.g. `l1_1e-3` or `dropout_0.3`.
+The script auto-detects the dataset from column names. The regularization label is used for output filenames.
 
-**Example — Waterbirds L1 run:**
+**Examples:**
+
 ```bash
-python plot_heatmap.py wb_l1/probe_accuracies_l1_1e-3.csv l1_1e-3
+python plot_heatmap.py results/waterbirds/l1/05-05-17-38_wb_probe_accuracy_L1_le-5.csv l1_1e-5
+python plot_heatmap.py results/colored_mnist/l2/04-18-10-24_probe_accuracy_l2_reg_1e-05.csv l2_1e-5
 ```
 
-This saves two heatmaps in the same directory as the CSV:
-- `bird_probe_heatmap_l1_1e-3.png` — bird-type probe accuracy by layer and epoch
-- `water_probe_heatmap_l1_1e-3.png` — water-background probe accuracy by layer and epoch
+---
 
-> **Note:** `plot_heatmap.py` is hardcoded for Waterbirds probe columns (`_bird` / `_water`). To use it with Colored MNIST CSVs (which have `_color` / `_digit` columns), manually update the column name variables near the top of `plot_heatmap.py`:
->
-> ```python
-> # Change these two lines:
-> bird_cols = [f'{layer}_bird' for layer in LAYER_ORDER]
-> water_cols = [f'{layer}_water' for layer in LAYER_ORDER]
->
-> # To:
-> bird_cols = [f'{layer}_color' for layer in LAYER_ORDER]
-> water_cols = [f'{layer}_digit' for layer in LAYER_ORDER]
-> ```
->
-> Also update the `plot_heatmap(...)` title strings and output filenames on the lines below to match.
+## Evaluation
+
+```bash
+python eval.py --dataset cmnist --model_path results/colored_mnist/l2/resnet_l2_1e-3.pt
+python eval.py --dataset waterbirds --model_path results/waterbirds/baseline/resnet_baseline.pt --datapath ../waterbird_complete95_forest2water2
+```
+
+For dropout models, pass `--dropout_rate` matching training:
+
+```bash
+python eval.py --dataset cmnist --model_path results/colored_mnist/dropout/resnet_dropout_0.3.pt --dropout_rate 0.3
+```
